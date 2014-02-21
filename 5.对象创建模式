@@ -1,0 +1,479 @@
+//对象创建模式
+	//命名空间模式：减少全局变量的数量，还能避免命名冲突和前缀的滥用
+		//用法：为应用和类库创建一个全局对象，然后将所有功能都添加到这个对象上。
+		
+		//重构前：5个全局变量
+		//构造函数
+		function Parent(){}
+		function Child(){}
+
+		//一个变量
+		var some_var = 1;
+
+		//一些对象
+		var module1 = {};
+		module1.data = {a:1,b:2};
+		var module2 = {}
+
+		//重构后：1个全局变量
+		//全局对象
+		var MYAPP = {};
+
+		//一个变量
+		MYAPP.some_var = 1;
+
+		//构造函数
+		MYAPP.Parent = function(){};
+		MYAPP.Child = function(){};
+
+		//一个对象容器
+		MYAPP.modules = {};
+
+		//嵌套的对象
+		MYAPP.modules.module1 = {};
+		MYAPP.modules.module1.data = {a:1,b:2};
+		MYAPP.modules.module2 = {};
+
+	//通用的命名空间函数
+	 	//不安全的做法
+	 	var MYAPP = {};
+
+	 	//更好的做法
+	 	if(typeof MYAPP === 'undefined'){
+	 		var MYAPP = {};
+	 	}
+
+	 	//简写
+	 	var MYAPP = MYAPP || {};
+
+	    //namespace()函数专门来检查工作，然后用它来穿件命名空间
+	    MYAPP.namespace('MYAPP.modules.module1');
+
+	    //等价于
+	    var MYAPP = {
+	    	modules : {
+	    		module1 : {
+
+	    		}
+	    	}
+	    };
+
+	    //namespace()实现实例
+	    var MYAPP = MYAPP || {};
+	    MYAPP.namespace = function(ns_string){
+	    	var parts = ns_string.split('.'),
+	    		parent = MYAPP,
+	    		i;
+
+	    	//去除不必要的全局变量层
+	    	if(parts[0] === 'MYAPP'){
+	    		parts = parts.slice(1);
+	    	}
+
+	    	for(i = 0; i < parts.length; i +=1){
+	    		//如果属性不存在就创建它
+	    		if(typeof parent[parts[i]] === 'undefined'){
+	    			parent[parts[i]] = {};
+	    		}
+	    		parent = parent[parts[i]];
+	    	}
+
+	    	return parent;
+	    };
+
+	    //将返回值赋给本地变量
+	    var module2 = MYAPP.namespace('MYAPP.modules.module2');
+	    module2 === MYAPP.modules.module2; //true
+
+	//依赖声明
+		function test1(){
+			alert(MYAPP.modules.m1);
+			alert(MYAPP.modules.m2);
+			alert(MYAPP.modules.m51);
+		}
+
+		//test1()压缩后的函数体
+		alert(MYAPP.modules.m1);alert(MYAPP.modules.m2);alert(MYAPP.modules.m51)
+
+		function test2(){
+			var modules = MYAPP.modules;
+			alert(modules.m1);
+			alert(modules.m2);
+			alert(modules.m52);
+		}
+
+		//test2压缩后的函数体
+		var a=MYAPP.modules;alert(a.m1);alert(a.m2);alert(a.m51)
+	 
+	 //私有属性和方法
+	 	//所有对象都是公有的
+	 	var myobj = {
+	 		myprop : 1,
+	 		getProp : function(){
+	 			return this.myprop;
+	 		}
+	 	};
+
+	 	console.log(myobj.myprop); //myprop是公有的
+	 	console.log(myobj.getProp()); //getProp也是公有的
+
+    //构造函数创建对象时，所有成员都是公有的
+    function Gadget(){
+    	this.name = 'iPod';
+    	this.stretch = function(){
+    		return this.name;
+    	};
+    }
+
+    var toy = new Gadget();
+    console.log(toy.name); //name是公有的
+    console.log(toy.stretch()); //stretch()也是公有的
+
+    //私有成员：在构造函数中创建闭包，任何在这个闭包中的部分都不会暴露到构造函数之外
+    function Gadget(){
+    	//私有成员
+    	var name = 'iPod';
+
+    	//公有函数
+    	this.getName = function(){
+    		return name;
+    	};
+    }
+
+    var toy = new Gadget();
+
+    //name是私有的
+    console.log(toy.name); //undefined
+
+    //公有方法可以访问到name
+    console.log(toy.getName()); //iPod
+
+    //特权方法：getName()就是特权方法，因为有访问name的特殊权限
+
+//私有成员失效
+   function Gadget(){
+   		//私有对象
+   		var specs = {
+   			screen_width : 320,
+   			screen_height : 180,
+   			color : 'white'
+   		};
+
+   		//公有函数
+   		this.getSpecs = function(){
+   			return specs;
+   		};
+   }
+
+   var toy = new Gadget(),
+   	   specs = toy.getSpecs();
+
+   	   specs.color = 'black';
+   	   specs.price = 'free';
+
+   	console.dir(toy.getSpecs());
+
+   	//color : 'black'
+   	//price : 'free'
+   	//screen_width : 320
+   	//screen_height : 480
+
+   	//对象字面量和私有成员
+   	var myobj; //一个对象
+   	(function(){
+   		//私有成员
+   		var name = 'my,oh my';
+
+   		//实现公有部分，注意没有var
+   		myobj = {
+   			//特权方法
+   			getName : function(){
+   				return name;
+   			}
+   		};
+   	}());
+
+   	myobj.getName(); //'my,oh my'
+
+   	//同理
+   	var myobj = (function(){  //即时函数创建一个闭包
+   		//私有成员
+   		var name = 'my,oh my';
+
+   		//实现公有部分
+   		return{
+   			getName : function(){
+   				return name;
+   			}
+   		};
+   	}());
+
+   	myobj.getName(); //'my,oh my'
+	
+	//原型和私有成员
+	//使用构造函数创建私有成员的弊端是：每一次调用构造函数创建对象时，这些私有成员都会被创建一次
+	//解决方法：为了避免重复劳动，节省内存，可以将公共的属性和方法添加到构造函数的prototype（原型）属性中
+	function Gadget(){
+		//私有成员
+		var name = 'iPod';
+
+		//公有函数
+		this.getName = function(){
+			return this.name;
+		};
+	}
+
+	Gadget.prototype = (function(){
+		//私有成员
+		var browser = 'Moblie Webkit';
+
+		//公有函数
+		return{
+			getBrowser : function(){
+				return browser;
+			}
+		};
+	}());
+
+	var toy = new Gadget();
+	console.log(toy.getName()); //自有的特权方法
+	console.log(toy.getBrowser()); //来自原型的特权方法
+
+	//将私有函数暴露为公有方法
+	var myarray;
+	(function(){
+		var astr = '[object Array]',
+			toString = Object.prototype.toString;
+
+		function isArray(a){
+			return toString.call(a) === astr;
+		}
+
+		function indexOf(haystack, needle){
+			var i = 0,
+				max = haystack.length;
+
+			for(; i < max; i +=1){
+				if(haystack[i] === needle){
+					return i;
+				}
+				return -1;
+			}
+		}
+
+		//将私有函数暴露为公有方法
+		myarray = {
+			isArray : isArray,
+			indexOf : indexOf,
+			inArray : indexOf
+		};
+	}());
+
+	myarray.isArray([1,2]); // true
+	myarray.isArray({0: 1}); // false
+	myarray.indexOf(["a", "b", "z"], "z"); // 2
+	myarray.inArray(["a", "b", "z"], "z"); // 2
+
+	//模块模式
+		//在即时函数提供的闭包中声明私有属性和私有方法
+		MYAPP.namespace('MYAPP.utilities.array');
+		MYAPP.utilities.array  = (function(){
+			//依赖声明
+			var uobj = MYAPP.utilities.object,
+				ulang = MYAPP.utilities.lang,
+
+			//私有属性
+			array_string = '[object Array]',
+			ops = Object.prototype.toString;
+
+			//私有方法
+			//...
+
+			//结束变量声明
+
+			//选择性放置一次性初始化代码
+			//....
+
+			//公有API
+			return{
+				inArray : function(needle, haystack){
+					for(var i = 0, max = haystack.length; i < max; i += 1){
+						if(haystack[i] === needle){
+							return true;
+						}
+					}
+				},
+
+				isArray : function(a){
+					return ops.call(a) === array_string;
+				}
+			};
+		}());
+
+	//暴露的模块模式
+	MYAPP.utilities.array = (function(){
+		//私有属性
+		var array_string = '[object Array]',
+			ops = Object.prototype.toString,
+
+		//私有方法
+		inArray = function(haystack, needle){
+			for(var i = 0, max = haystack.length; i < max; i +=1){
+				if(haystack[i] ===needle){
+					return i;
+				}
+			}
+			return -1;
+		},
+
+		isArray = function(a){
+			return ops.call(a) === array_string;
+		};
+
+		//暴露公有的API
+		return{
+			isArray : isArray,
+			indexOf : inArray
+		};
+	}());
+
+	//创建构造函数的模块
+		//使用构造函数创建对象会更方便
+		//唯一的区别是包裹模块的即时函数会在最后返回一个函数，而不是一个对象
+		MYAPP.namespace('MYAPP.utilities.array');
+
+		MYAPP.utilities.array = (function(){
+			//依赖声明
+			var uobj = MYAPP.utilities.object,
+				ulang = MYAPP.utilities.lang,
+
+				//私有属性和方法
+				Constr;
+
+				//结束变量定义
+
+				//....
+
+				//公有API--构造函数
+				Constr = function(o){
+					this.elements = this.toArray(o);
+				};
+
+				//公有API--原型
+				Constr.prototype = {
+					constructor : MYAPP.utilities.array,
+					version : '2.0',
+					toArray : function(obj){
+						for(var i = 0, a = [], len = obj.length; i < len; i+=1){
+							a[i] = obj[i];
+						}
+
+						return a;
+					}
+				};
+
+				//返回构造函数
+				return Constr;
+		}());
+
+		//使用这个构造函数
+		var attr = new MYAPP.utilities.array(obj);
+
+	//在模块中引入全局上下文
+	MYAPP.utilities.module = (function(app, global){
+		//全局对象和全局命名空间都作为本地变量存在
+	}(MYAPP, this));
+
+	//沙箱模式
+	new Sandbox(function(box){
+		//......
+	});
+
+	Sandbox(['ajax', 'event'],function(box){
+		//.......
+	});
+
+	//多个沙箱对象
+	Sandbox('dom', 'event', function(box){
+		//使用dom和event模块
+
+		Sandbox('ajax',function(box){
+			//另一个沙箱中的box，这个box和外面的box的不一样
+
+			//...
+		});
+
+		//这里的代码跟ajax模块无关
+	});
+
+	//添加模块
+	Sandbox.module = {};
+
+	Sandbox.module.dom = function(box){
+		box.getElement = function(){};
+		box.getStyle = function(){};
+		box.foo = 'bar';
+	};
+
+	Sandbox.module.event = function(box){
+		//如果有需要的话可以访问Sandbox的原型
+		box.constructor.prototype.m = 'mm';
+		box.attachEvent = function(){};
+		box.dettachEvent = function(){};
+	};
+
+	Sandbox.module.ajax = function(box){
+		box.makeRequest = function(){};
+		box.getResponse = function(){};
+	};
+
+	//实现构造函数
+		//pop():删除并返回数组的最后一个元素
+		//转换为数组：Array.prototype.slice.call(arguments)
+
+	function Sandbox(){
+		//将参数转换为数组
+		var args = Array.prototype.slice.call(arguments),
+		    //最后一个参数是回调函数
+		    callback = args.pop(),
+		    //参数可以作为数组或者单独的参数传递
+		    modules = (args[0] && typeof args[0] === 'string') ? args : args[0],i;
+
+		    //保证函数作为构造函数被调用
+		    if(!(this instanceof Sandbox)){
+		    	return new Sandbox(module,callback);
+		    } 
+
+		    //根据需要给this添加属性
+		    this.a = 1;
+		    this.b = 2;
+
+		    //给this对象添加模块
+		    //未指明模块或者*都表示“使用所有模块”
+		    if(!modules || modules[0] === '*'){
+		    	modules = {};
+		    	for(i in Sandbox.modules){
+		    		if(Sandbox.modules.hasOwnProperty(i)){
+		    			modules.push(i);
+		    		}
+		    	}
+		    }
+
+		    //初始化指定模块
+		    for(i = 0; i < modules.length; i += 1){
+		    	Sandbox.modules[modules[i]](this);
+		    }
+
+		    //调用回调函数
+		    callback(i);
+
+		    //需要添加在原型上的属性
+		    Sandbox.prototype = {
+		    	name : 'aa',
+		    	version : '1.0',
+		    	getName : function(){
+		    		return this.name;
+		    	}
+		    };
+
+	};
