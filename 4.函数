@@ -1,0 +1,256 @@
+//术语
+	//具名函数表达式
+	var add = function add(a,b){
+		return a + b;
+	};
+
+	//匿名函数表达式
+	var add = function(a,b){
+		return a + b;
+	};
+
+//声明 vs 表达式：命名与提前
+	//在以下情况，只能用函数声明
+	//作为参数传递给callMe的函数表达式
+	callMe(function me(){
+		//具名函数
+	});
+
+	callMe(function(){
+		//匿名函数
+	});
+
+	//字面量
+	var myobject = {
+		say : function(){
+			//我是函数表达式
+		}
+	};
+
+	//“函数声明”只能在“程序代码”中，也就是函数体内或是在全局
+
+	//全局作用域
+	function foo(){}
+	//函数体内
+	function local(){
+		//本地作用域
+		function bar(){}
+		return bar;
+	}
+
+//声明提前
+	//不管在函数内何处声明变量，变量都会自动提前至函数体的顶部
+	function hoistMe(){
+
+		console.log(typeof foo());
+		console.log(typeof bar());
+
+		foo(); //function
+		bar(); //undefined
+
+		//函数声明：定义和声明都被提前
+		function foo(){
+			alert('foo');
+		}
+
+		//函数表达式：变量提前，定义不提前
+		var bar = function(){
+			alert('bar');
+		};
+	}
+
+//回调模式
+	function writeCode(callback){
+		callback();
+	}
+
+	function instroduceBugs(){
+		//...
+	}
+	writeCode(instroduceBugs);
+
+//回调的例子
+	//重构后的findNodes接受一个回调函数
+	var findNodes = function(callback){
+		var i = 100000,
+			nodes = [],
+			found;
+
+			//检查回调函数是否执行
+			if(typeof callback !== 'function'){
+				callback = false;
+			}
+
+			while(i){
+				i -= 1;
+
+				//...
+
+				//回调
+				if(callback){
+					callback(found);
+				}
+
+				nodes.push(found)
+			}
+
+			return nodes;
+	};
+
+	//回调函数
+	var hide = function(node){
+		node.style.display = "none";
+	};
+
+	//找到节点并隐藏它们
+	findNodes(hide);
+
+//回调和作用域
+	var myapp = {};
+	myapp.color = 'green';
+	myapp.paint = function(node){
+		node.style.color = this.color;
+	};
+
+	var findNodes = function(callback){
+		//...
+		if(typeof callback === "function"){
+			callback(found);
+		}
+	};
+
+	findNodes(myapp.paint); //这样有问题，因为myapp.paint中的this没有定义，所以this指向的是全局变量；findNodes()是全局函数
+	findNodes(myapp.paint,myapp); //正确写法
+	findNodes('paint',myapp);
+
+//异步事件监听
+	document.addEventListener('click',console.log,false);
+
+//延时
+	var thePlotThickens = function(){
+		console.log('500ms later...');
+	};
+
+	setTimeout(thePlotThickens,1000);
+
+//返回函数
+	var setup = function(){
+		alert(1);
+		return function(){
+			alert(2);
+		};
+	};
+
+	//使用setup()函数
+	var my = setup(); //alert 1
+	my(); //2
+
+	var setup = function(){
+		var count = 0;
+		return function(){
+			return count += 1;
+		};
+	};
+
+	var next = setup();
+	next(); //1
+	next(); //2
+
+//重定义函数
+	var scareMe = function(){
+		alert('Boo!');
+		scareMe = function(){
+			alert('double boo!');
+		};
+	};
+
+	//使用重定义函数
+	scareMe(); //Boo!
+	scareMe(); //double boo!
+
+	//添加一个新属性
+	scareMe.property = 'properly';
+	//被赋值一个不同名的变量
+	var prank = scareMe;
+	//作为方法使用
+	var spooky = {
+		boo:scareMe
+	};
+
+	//使用新名字调用
+	prank(); //Boo!
+	prank(); //Boo!
+	console.log(prank.property); //properly
+
+	//使用方法调用
+	spooky.boo(); //Boo!
+	spooky.boo(); //Boo!
+	console.log(spooky.boo.property); //properly
+
+	//使用重定义函数
+	scareMe(); //double boo!
+	scareMe(); //double boo!
+	console.log(scareMe.property); // undefined
+
+//即时函数
+	(function(){
+		alert(123);
+	}())
+
+	(function(){
+		var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+		    today = new Date,
+		    msg = 'Today is' + days[today.getDay()] + ',' + today.getDate();
+
+		alert(msg);
+	}())  //// "Today is Fri, 13"
+
+//即时函数参数
+	(function(who,when){
+		console.log(who + when);
+	}('jack', new Date()))
+
+//即时函数返回值
+	var result = (function(){
+		return 2 + 2;
+	}());
+
+	var o = {
+		message : (function(){
+			var who = 'me',
+				what = 'call';
+
+			return who + what;
+		}()),
+		getMsg : function(){
+			return this.message;
+		}
+	};
+
+	//使用对象
+	o.getMsg(); //me call
+	o.message; // me call
+
+//对象即时初始化：避免污染全局作用域的方法
+	//由init()完成，这个方法在对象创建后立即执行
+	({
+		maxwidth : 600,
+		maxheight :　400,
+
+		gimmeMax : function(){
+			return this.maxwidth + 'x' + this.maxheight;
+		},
+
+		//初始化
+		init : function(){
+			console.log(this.gimmeMax);
+		}
+	}).init();
+
+//配置对象
+	var conf = {
+		username : 'batman',
+		first :　'Bruce',
+		last : 'Wayne'
+	};
+	addPerson(conf);
