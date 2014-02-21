@@ -1,0 +1,232 @@
+//对象字面量：名值对组成的散列表
+	//其中的值可以是原始值也可以是对象。（ps:不管是什么类型，它们都是属性; 属性值也可以是函数，而我们称这个函数为方法）
+	//"对象字面量写法"是一种按需创建对象的理想方式
+
+	//定义一个空对象
+	var dog = {};
+	//添加一个属性
+	dog.name = 'beijing';
+	//添加一个方法
+	dog.getName= function(){
+		return dog.name;
+	};
+
+	//可以在创建对象的时候直接添加功能
+	var dog = {
+		dog.name : 'beijing',
+		dog.getName : function(){
+			return dog.name;
+		}
+	};
+
+//对象字面量的语法
+	//对象主体包含在花括号内
+	//对象内的属性或是方法用逗号分隔，最后个值不用加逗号，因为在IE下会报错
+	//属性和值之间用冒号分隔
+	//如果将对象付给一个变量，要在右括号加个分号
+
+//通过构造函数创建对象
+	//一种字面量创建构造函数
+	var car = {goes:'far'};
+	//一种内置构造函数创建函数
+	var car = new Object();
+	car.goes = "far";
+
+//Object()构造函数的参数
+	//创建实例对象时能用对象字面量就不用new Object()构造函数
+
+	//空对象
+	var o = new Object();
+	console.log(o.constructor === Object); //true
+
+	//数值对象
+	var o = new Object(1);
+	console.log(o.constructor === Number); //true
+	console.log(o.toFixed(2));  //1.00
+
+	//字符创对象
+	var o = new Object('i am object!');
+	console.log(o.constructor === String); //true
+	//普通对象没有substring()方法，但字符串有
+	console.log(typeof o.substring); //"function"
+
+	//布尔值对象
+	var o = new Object(true);
+	console.log(o.constructor === Boolean); //true
+
+//自定义构造函数
+	var Person = function(name){
+		this.name = name;
+		this.say = function(){
+			return 'i am' + this.name;
+		};
+	};
+
+	//通过new来调用构造函数时
+		//创建一个空对象，将它赋值给this，并返回继承函数的原型
+		//通过this将属性和方法添加至这个对象
+		//最后返回this指向的新对象
+
+		var Person =  function(name){
+			//使用对象字面量创建新对象
+			//var this = {};
+
+			//添加属性和方法
+			this.name = name;
+			this.say = function(){
+				return 'i am' + this.name;
+			};
+
+			//return this;
+		}
+
+		//上例中，say()放在this中，每次调用new Person中，都会被执行一次，显然这样效率很低
+		//最好的做法：将say()放在原型中
+		var Person =function(name){
+			//var this = {};
+			this.name = name;
+			//return this
+		}
+
+		Person.prototype.say = function(){
+			return 'i am' + this.name;
+		}
+
+//构造函数的返回值：当使用new调用时，构造函数返回一个对象，默认返回this所指向的对象
+	//在没有return语句的情况下，会隐式返回个this，但我们可以返回任意指定的对象
+	var Objectmaker = function(){
+		//name属性会被忽略，因为返回了另一个对象
+		this.name = 'this is it';
+
+		//创建并返回一个新对象
+		var that = {};
+		that.name = "And that's that";
+		return that;
+	};
+
+	//测试
+	var o = new Objectmaker();
+	console.log(o.name); //And that's that
+
+//强制使用new的模式：构造函数跟普通函数一样，只是通过new调用而已
+	//如果构造函数不是new调用，函数内的this会指向全局变量
+
+	//构造函数
+	function Waffle(){
+		this.tastes = 'yummy';
+	}
+
+	//新对象
+	var good_morning = new Waffle();
+
+	console.log(typeof good_morning); //Object
+	console.log(good_morning.tastes); //yummy
+
+	//漏掉new，this指向全局变量
+	var good_morning = Waffle();
+
+	console.log(typeof good_morning); //undefined
+	console.log(window.tastes); //yummy
+
+//使用that：PS：能避免漏掉new时，逻辑错误的发生
+	//使用that可以确保构造函数一定会按照构造函数的方式执行
+	function Waffle(){
+		var that = {};
+		that.tastes = 'yummy';
+		return that;
+	}
+
+	//或是这样
+	function Waffle(){
+		return {
+			tastes:'yummy'
+		};
+	}
+
+	//不管用什么方式调用他，他都会返回一个实例
+	var first = new Waffle(),
+		second = Waffle();
+
+	console.log(first.tastes); //yummy
+	console.log(second.tastes); //yummy
+
+//调用自身的构造函数
+	//这种方法也是解决漏掉new的情况的
+	function Waffle(){
+		if(!(this instanceof Waffle)){ //检查this是否是构造函数的实例，如果不是，则通过new再次调用自己
+			return new Waffle();
+		}
+
+		this.tastes = 'yummy';
+	}
+	Waffle.prototype.wantAnother = true;
+
+	//测试
+	var first = new Waffle(),
+		second = Waffle();
+
+	console.log(first.tastes); //yummy
+	console.log(second.tastes); // yummy
+
+	console.log(first.wantAnother); //true
+	console.log(second.wantAnother); //true
+
+	//这种是比较通用的检测实例的方法
+	if(!(this instanceof arguments.callee)){
+		return new arguments.callee();
+	}
+
+//数组字面量
+
+	//有三个数组
+	var a = new Array('it','she','he');
+	//完全相同的数组
+	var a = ['it','she','he'];
+
+	console.log(typeof a); //object:因为数组也是对象
+	console.log(a.constructor === Array); //true
+
+//Array()构造函数的“陷阱”
+	//含1个元素的数组
+	var a = [3];
+
+	console.log(a.length); //1
+	console.log(a[0]); //3
+
+	//含3个元素的数组
+	var a = new Array(3);
+
+	console.log(a.length); //3
+	console.log(a[0]); //undefined
+
+	//含小数点的数组
+	var b = [3.14];
+
+	console.log(b[0]); //3.14
+
+	var b = new Array(3.14); // RangeError: invalid array length
+
+	console.log(b[0]); //undefined
+
+//原始值的包装对象
+ 	//...省略一些内容，这里主要是自己想记住的
+ 	"monkey".slice(3,6); //key
+
+ 	var s = "hello";
+ 	console.log(s.toUpperCase()); //HELLO
+
+ 	// 字符串原始值
+	var greet = "Hello there";
+
+	// 为使用split方法，原始值被转换为对象
+	greet.split(' ')[0]; // "Hello"
+
+	// 给原始值添加属性并不会报错
+	greet.smile = true;
+
+	// 但实际上却没有作用
+	typeof greet.smile; // "undefined"
+
+
+
+
