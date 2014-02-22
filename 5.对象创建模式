@@ -477,3 +477,154 @@
 		    };
 
 	};
+
+	//静态成员
+	MathUtil.max(3,5); //这是个公有静态成员的示例，可以在不实例化类的情况下使用
+
+	//公有静态成员
+		//js没有专门用于静态成员的语法。
+			//但可以通过给构造函数添加属性的方法，可以拥有和基于类的语言一样的语法
+    
+        //构造函数
+        var Gadget = function(){};
+
+        //静态方法:不需要指定一个具体的对象就能工作
+        Gadget.isShiny = function(){
+        	return 'you bet';
+        };
+
+        //添加到原型的普通方法
+        Gadget.prototype.setPrice = function(price){
+        	this.price = price;
+        };
+
+        //调用静态方法
+        Gadget.isShiny(); //you bet
+
+        //创建实例并调用方法
+        var iphone = new Gadget();
+        iphone.setPrice(200);
+
+        //使用静态方法的调用方式去调用实例方法不能正常工作
+        Gadget.setPrice(500); //undefined
+
+        //使用实例的方法去调用静态方法也不能正常工作
+        iphone.isShiny(); //undefined
+
+        //可以这样：
+        Gadget.prototype.isShiny = Gadget.isShiny;
+        iphone.isShiny(); //you bet
+
+    //同个方法被静态调用和非静态调用是不同的行为
+    //构造函数
+    var Gadget = function(price){
+    	this.price = price;
+    };
+
+    //静态方法
+    Gadget.isShiny = function(){
+    	//这句始终正常工作
+    	var msg = 'you bet';
+
+    	if (this instanceof Gadget) {
+    		//这句只有在非静态方式调用时正常工作
+    		msg += ', it costs $' + this.price + '!';
+    	};
+
+    	return msg;
+    };
+
+    //在原型上添加方法
+    Gadget.prototype.isShiny = function(){
+    	return Gadget.isShiny.call(this);
+    };
+
+    //静态方法的调用方式
+    Gadget.isShiny(); //you bet
+
+    //非静态调用
+    var a = new Gadget('400');
+    a.isShiny(); //"you bet, it costs $400!"
+
+    //私有静态成员
+    var Gadget = (function(){
+    	//静态变量/私有属性
+    	var counter = 0;
+
+    	//返回构造函数的新实现
+    	return function(){
+    		console.log(counter += 1);
+    	};
+
+    }()); //立即执行
+
+    var g1 = new Gadget();// logs 1
+	var g2 = new Gadget();// logs 2
+	var g3 = new Gadget();// logs 3
+
+	//构造函数
+	var Gadget = (function(){
+		//静态变量/私有属性
+		var counter = 0,
+			NewGaget;
+
+		//这将是Gadget的新实现
+		NewGaget = function(){
+			counter += 1;
+		};
+
+		//特权方法
+		NewGaget.prototype.getLastId = function(){
+			return counter;
+		};
+
+		//重写构造函数
+		return NewGaget;
+
+	}()); //立即执行
+
+	var iphone = new Gadget();
+	iphone.getLastId(); //1
+
+	//链式调用模式
+	var obj = {
+		value : 1,
+		increment : function(){
+			this.value += 1;
+		},
+		add : function(v){
+			this.value += v;
+			return this;
+		},
+		shout : function(){
+			alert(this.value);
+		}
+	};
+
+	//链式调用方法
+	obj.increment().add(1).shout(); //5
+
+	//method()方法：2个参数：新方法的名字，新方法的实现
+		//在this中添加方法却是不高效的，因为最终这些方法会在每个实例中被重新创建一次，这样会花费更多的内存。
+		//这也是为什么可重用的方法应该被放到构造函数的prototype属性（原型）中的原因。
+		//但对很多开发者来说，prototype可能跟个外星人一样陌生，所以你可以通过一个方法将它隐藏起来。
+
+		var Person = function(name){
+			this.name = name;
+		}.
+		  method('getName',function(){
+		  	return this.name;
+		  }).
+		  method('setName',function(name){
+		  	this.name = name;
+		  	return this;
+		  });
+
+
+
+
+
+
+
+
+
